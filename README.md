@@ -2,7 +2,7 @@
  * @Descripttion: 
  * @Author: tianxiangbing
  * @Date: 2018-11-21 15:36:18
- * @LastEditTime: 2020-07-24 11:22:43
+ * @LastEditTime: 2021-08-12 18:09:45
  * @github: https://github.com/tianxiangbing
  -->
 # x-dialog
@@ -95,5 +95,7 @@ Dialog.hide();//关闭当前
     是否显示最大化、还原按钮
 ## maxContainer
     最大化的容器dom，默认为body
+## max :bool
+    是否最大化显示,与maxCotainer相结合
 ### 关于作者
 [https://github.com/tianxiangbing](https://github.com/tianxiangbing)

@@ -119,3 +119,6 @@
           opacity: .65; }
         .x-dialog .dialog-content .dialog-action button:active, .x-dialog .dialog-content .dialog-action button.active {
           background-image: none; }
+
+.overflowhidden {
+  overflow: hidden !important; }

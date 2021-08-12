@@ -1605,6 +1605,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
+	var _typeof = typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol" ? function (obj) {
+	  return typeof obj === "undefined" ? "undefined" : _typeof2(obj);
+	} : function (obj) {
+	  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj === "undefined" ? "undefined" : _typeof2(obj);
+	};
+
 	var _extends = Object.assign || function (target) {
 	  for (var i = 1; i < arguments.length; i++) {
 	    var source = arguments[i];for (var key in source) {
@@ -1613,12 +1619,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	  }return target;
-	};
-
-	var _typeof = typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol" ? function (obj) {
-	  return typeof obj === "undefined" ? "undefined" : _typeof2(obj);
-	} : function (obj) {
-	  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj === "undefined" ? "undefined" : _typeof2(obj);
 	};
 
 	var _createClass = function () {
@@ -1748,7 +1748,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _this2.setPosition = function (newProps) {
 	      var _this = _this2;
-	      if (!_this2.dialog) {
+	      if (!_this2.dialog || _this2.props.defaultPosition !== undefined) {
 	        return;
 	      }
 	      _this.dialog.className ? _this.dialog.className += " opacity-animate" : undefined;
@@ -1844,13 +1844,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    _this2.maxreset = function (e) {
+	      var maxContainer = _this2.getMaxContainer();
 	      if (_this2.state.status === 'reset') {
-	        var maxContainer = document.body;
-	        if (typeof _this2.props.maxContainer === 'string') {
-	          maxContainer = document.querySelector(_this2.props.maxContainer);
-	        } else if (_typeof(_this2.props.maxContainer) === 'object') {
-	          maxContainer = _this2.props.maxContainer;
-	        }
 	        _this2.oldprops = { width: _this2.state.width, hegiht: _this2.state.height, mask: _this2.state.mask, fixed: _this2.state.fixed, draggable: _this2.state.draggable, defaultPosition: _this2.state.defaultPosition };
 	        var maxWH = {
 	          fixed: ["left", "top", "right", "bottom"],
@@ -1860,12 +1855,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	          draggable: false
 	          // mask:false
 	        };
+	        maxContainer.scrollTo(0, 0);
+	        if (maxContainer == document.body) {
+	          window.scrollTo(0, 0);
+	        }
+	        maxContainer.className += ' overflowhidden';
 	        _this2.setState(_extends({ status: 'max' }, maxWH), function () {
 	          // this.setPosition(this.props);
 	          _this2.props.resizeCallback && _this2.props.resizeCallback(_this2.state.status);
 	        });
 	      } else {
 	        _this2.status = 'reset';
+	        maxContainer.className = maxContainer.className.replace('overflowhidden', '');
 	        _this2.setState(_extends({ status: 'reset' }, _this2.oldprops), function () {
 	          _this2.setPosition(_this2.props);
 	          _this2.props.resizeCallback && _this2.props.resizeCallback(_this2.state.status);
@@ -1883,7 +1884,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _this2.id = props.id || +new Date();
 	    _this2.dialog = null;
 	    _this2.state = {
-	      isShow: props.isShow, defaultPosition: {},
+	      isShow: props.isShow, defaultPosition: props.defaultPosition || {},
 	      height: props.height, width: props.width, fixed: props.fixed,
 	      draggable: props.draggable, status: 'reset',
 	      mask: props.mask
@@ -1980,15 +1981,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	          dialogList.splice(i, 1);
 	        }
 	      });
+	      var maxContainer = this.getMaxContainer();
+	      maxContainer.className = maxContainer.className.replace('overflowhidden', '');
 	      this.props.updateList(dialogList);
 	    }
 	  }, {
 	    key: "componentDidMount",
 	    value: function componentDidMount() {
+	      var _this5 = this;
+
 	      // console.log(this.dialog)
 	      document.addEventListener("keydown", this.keyBind);
-	      if (this.props.isShow) {
+	      if (this.props.isShow && this.state.isShow == false) {
 	        this.show(this.props);
+	      }
+	      this.setPosition(this.props);
+	      if (this.props.max) {
+	        setTimeout(function () {
+	          _this5.maxreset();
+	        }, 0);
 	      }
 	      // lastDialog = this;
 	      dialogList.push({ instance: this, id: this.id });
@@ -2022,16 +2033,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: "show",
 	    value: function show(newProps) {
-	      var _this5 = this;
+	      var _this6 = this;
 
 	      // console.log("show");
 	      var _this = this;
 	      this.clearTimer();
 	      this.setState({ isShow: true }, function () {
-	        _this5.setPosition(newProps);
+	        _this6.setPosition(newProps);
 	        var st = setTimeout(function () {
 	          clearTimeout(st);
-	          _this5.setPosition(newProps);
+	          _this6.setPosition(newProps);
 	        }, 0);
 	        //这里绑定resize事件进行maxheight值重置
 	        // EleResize.on(this.refs.dialogContent,()=>{
@@ -2070,10 +2081,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: "_hide",
 	    value: function _hide() {
-	      var _this6 = this;
+	      var _this7 = this;
 
 	      this.setState({ isShow: false }, function () {
-	        _this6.props.afterHide(_this6.id);
+	        _this7.props.afterHide(_this7.id);
 	      });
 	    }
 	  }, {
@@ -2137,6 +2148,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	      //   </div>
 	      //   : <div />;
 	    }
+	  }, {
+	    key: "getMaxContainer",
+	    value: function getMaxContainer() {
+	      var maxContainer = document.body;
+	      if (typeof this.props.maxContainer === 'string') {
+	        maxContainer = document.querySelector(this.props.maxContainer);
+	      } else if (_typeof(this.props.maxContainer) === 'object') {
+	        maxContainer = this.props.maxContainer;
+	      }
+	      return maxContainer;
+	    }
+	    // status = 'reset';
+	    //最大化还原
+
 	  }, {
 	    key: "renderDialog",
 	    value: function renderDialog() {
@@ -2206,9 +2231,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        dialogList[l].instance.hide();
 	      }
 	    }
-	    // status = 'reset';
-	    //最大化还原
-
 	  }]);
 
 	  return Dialog;
@@ -2232,7 +2254,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  draggable: _propTypes2.default.bool,
 	  maskHide: _propTypes2.default.bool,
 	  isMax: _propTypes2.default.bool,
-	  titleClassName: _propTypes2.default.string
+	  titleClassName: _propTypes2.default.string,
+	  max: _propTypes2.default.bool
 	};
 	Dialog.defaultProps = {
 	  isShow: false,
@@ -2252,7 +2275,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  width: 'auto',
 	  container: document.body,
 	  isMax: false,
-	  titleClassName: ''
+	  titleClassName: '',
+	  max: false
 	};
 	exports.default = Dialog;
 

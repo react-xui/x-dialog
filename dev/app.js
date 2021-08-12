@@ -33,11 +33,13 @@ class App extends React.Component {
   noAction() {
     // this.setState({ isShow:true });
     // this.replaceState()
-    let state ={isShow:true,title:"我是标题啊",mask:false} ;
+    let state ={isShow:true,title:"我是标题啊",mask:false,defaultPosition:{
+      x:200,y:100,x2:10,y2:20
+    }} ;
     this.setState({"dialog":state});
   }
   defaultDialog(){
-    let state ={isShow:true,title:"我是标题啊",zIndex:999, draggable:true,mask:false,local:local,okCallback:()=>{
+    let state ={isShow:true,max:true,title:"我是标题啊",zIndex:999, draggable:true,mask:false,local:local,okCallback:()=>{
       alert('我点了确定')
     },afterHide:()=>{
       this.state.dialog.isShow = false;
@@ -94,11 +96,11 @@ class App extends React.Component {
     mask:true,
     container:'#container', title:'标题',draggable:true,
     children:<Test/>,
+    max:true,
     afterHide:()=>alert('我又隐藏了')})(f=>{
       setTimeout(()=>{
         // f.hide();
         // Dialog.hide();
-        
       },10000)
     })
     // setTimeout(()=>{
@@ -162,16 +164,7 @@ class App extends React.Component {
         <button onClick={e=>{
           this.setState({isShowDialog2:true})
         }}>第二弹窗</button>
-        <Dialog
-          isShow={this.state.isShowDialog2}
-          content="123132123123"
-          mask={false}
-          afterHide={()=>{
-            this.setState({isShowDialog2:false})
-          }}
-        >
-
-        </Dialog>
+        
       </div>
     )
   }

@@ -30,8 +30,9 @@ export default class Dialog extends PureComponent {
     dragHandle: PropTypes.string,
     draggable: PropTypes.bool,
     maskHide: PropTypes.bool,
-    isMax:PropTypes.bool,
-    titleClassName:PropTypes.string
+    isMax: PropTypes.bool,
+    titleClassName: PropTypes.string,
+    max: PropTypes.bool,
   };
   static defaultProps = {
     isShow: false,
@@ -47,11 +48,12 @@ export default class Dialog extends PureComponent {
     afterHide: () => { },
     afterShow: () => { },
     okCallback: () => { },
-    height:'auto',
-    width:'auto',
+    height: 'auto',
+    width: 'auto',
     container: document.body,
-    isMax:false,
-    titleClassName:''
+    isMax: false,
+    titleClassName: '',
+    max: false,
   };
   container = document.documentElement;
   bounds = 'body';
@@ -59,17 +61,17 @@ export default class Dialog extends PureComponent {
     super(props);
     this.id = props.id || +new Date();
     this.dialog = null;
-    this.state = { 
-      isShow: props.isShow, defaultPosition: {} ,
-      height:props.height,width:props.width,fixed:props.fixed,
-      draggable:props.draggable,status:'reset',
-      mask:props.mask,
-  };
+    this.state = {
+      isShow: props.isShow, defaultPosition: props.defaultPosition || {},
+      height: props.height, width: props.width, fixed: props.fixed,
+      draggable: props.draggable, status: 'reset',
+      mask: props.mask,
+    };
     this.keyBind = this.keyBind.bind(this); //方便移除事件绑定.每次bind会生成新的对象
 
     this.maskWH = {
-      width: Math.max(document.documentElement.offsetWidth ,document.body.scrollWidth) ,
-      height: Math.max(document.documentElement.offsetHeight,document.body.scrollHeight,document.documentElement.clientHeight) 
+      width: Math.max(document.documentElement.offsetWidth, document.body.scrollWidth),
+      height: Math.max(document.documentElement.offsetHeight, document.body.scrollHeight, document.documentElement.clientHeight)
     }
     //容器配置
     if (document.body != this.props.container && typeof this.props.container === 'string') {
@@ -106,7 +108,7 @@ export default class Dialog extends PureComponent {
     this.setDialogRef = element => {
       this.dialog = element;
     };
-    this.dragPosition = {x:0,y:0};
+    this.dragPosition = { x: 0, y: 0 };
   }
   componentWillReceiveProps(newProps) {
     // console.log(newProps.isShow, this.state.isShow);
@@ -134,7 +136,7 @@ export default class Dialog extends PureComponent {
     this.destory();
     document.removeEventListener("keydown", this.keyBind);
     // window.removeEventListener('resize', this.computeHeight, false);
-    window.cancelAnimationFrame &&this.frameId ? window.cancelAnimationFrame(this.frameId):null;
+    window.cancelAnimationFrame && this.frameId ? window.cancelAnimationFrame(this.frameId) : null;
   }
   //销毁时更新dialogList;
   destory() {
@@ -143,18 +145,26 @@ export default class Dialog extends PureComponent {
         dialogList.splice(i, 1)
       }
     })
+    let maxContainer = this.getMaxContainer();
+    maxContainer.className = maxContainer.className.replace('overflowhidden', '');
     this.props.updateList(dialogList);
   }
   componentDidMount() {
     // console.log(this.dialog)
     document.addEventListener("keydown", this.keyBind);
-    if (this.props.isShow) {
+    if (this.props.isShow && this.state.isShow == false) {
       this.show(this.props)
+    }
+    this.setPosition(this.props)
+    if (this.props.max) {
+      setTimeout(() => {
+        this.maxreset()
+      }, 0)
     }
     // lastDialog = this;
     dialogList.push({ instance: this, id: this.id });
     // window.addEventListener('resize', this.computeHeight, false)
-    window.requestAnimationFrame ? this.frameId = window.requestAnimationFrame(this.checkPosition):null;
+    window.requestAnimationFrame ? this.frameId = window.requestAnimationFrame(this.checkPosition) : null;
   }
   // computeHeight=()=>{
   //   if(this.state.status =='max'){
@@ -184,47 +194,47 @@ export default class Dialog extends PureComponent {
     //   this.setPosition(this.props);
     // }
   }
-  checkPosition=()=>{
+  checkPosition = () => {
     let height = this.refs.dialogContent.offsetHeight;
-    if(this.oldHeight !==height ){
+    if (this.oldHeight !== height) {
       this.oldHeight = height;
       let stop = this.container.scrollTop;
       let conHeight = this.container.clientHeight;
       let posY = this.state.defaultPosition.y + height + this.dragPosition.y;
-      let buttomY  = conHeight + stop;
+      let buttomY = conHeight + stop;
       // let pos = 
       //判断是否超出底边界
-      if(posY > buttomY ){
+      if (posY > buttomY) {
         let y = buttomY - height - this.dragPosition.y;
         // this.state.defaultPosition.y + this.dragPosition.y + this.refs.dialogContent;
-        this.setState({defaultPosition:{x:this.state.defaultPosition.x,y}},()=>{
+        this.setState({ defaultPosition: { x: this.state.defaultPosition.x, y } }, () => {
           //判断头部是否超出顶边界
           //如果超出，修改内容高度
-          try{
+          try {
             let cs = window.getComputedStyle(this.refs.dialogContent);
             let yy = parseInt(cs.top) + parseInt(cs.getPropertyValue('transform').match(/(\d+)/gi)[5] || 0);
-            if( yy <0 ){
+            if (yy < 0) {
               let headHeight = this.refs.dialogHeader ? this.refs.dialogHeader.offsetHeight : 0;
               let footHeight = this.refs.dialogFooter ? this.refs.dialogFooter.offsetHeight : 0;
-              let bodyHeight = conHeight - footHeight - headHeight - 2 ; 
+              let bodyHeight = conHeight - footHeight - headHeight - 2;
               let maxHeight = Math.max(0, bodyHeight)
               this.refs.dialogBody.style.maxHeight = maxHeight + "px";
-              this.setState({defaultPosition:{x:this.state.defaultPosition.x,y: y +(this.refs.dialogBody.scrollHeight-maxHeight) }});
+              this.setState({ defaultPosition: { x: this.state.defaultPosition.x, y: y + (this.refs.dialogBody.scrollHeight - maxHeight) } });
             }
-          }catch(ex){
+          } catch (ex) {
             console.error(ex);
           }
         });
       }
     }
-    window.requestAnimationFrame ? this.frameId = window.requestAnimationFrame(this.checkPosition):null;
+    window.requestAnimationFrame ? this.frameId = window.requestAnimationFrame(this.checkPosition) : null;
   }
   clearTimer() {
     this.timer && clearTimeout(this.timer);
   }
   setPosition = (newProps) => {
     let _this = this;
-    if(!this.dialog){
+    if (!this.dialog || this.props.defaultPosition!==undefined) {
       return;
     }
     _this.dialog.className ? _this.dialog.className += " opacity-animate" : undefined;
@@ -264,7 +274,7 @@ export default class Dialog extends PureComponent {
       }
     }
     // console.log(ot,y)
-    if(x !==this.state.x || y !==this.state.y || x2 !==this.state.x2 || y2 !== this.state.y2){
+    if (x !== this.state.x || y !== this.state.y || x2 !== this.state.x2 || y2 !== this.state.y2) {
       _this.setState({
         defaultPosition: {
           x,
@@ -278,7 +288,7 @@ export default class Dialog extends PureComponent {
     }
     let height = parseInt(_this.refs.dialogContent.offsetHeight);
     let maxHeight =
-      newProps.height ==='auto'|| !newProps.height ? parseInt(this.container.clientHeight):newProps.height;
+      newProps.height === 'auto' || !newProps.height ? parseInt(this.container.clientHeight) : newProps.height;
     let headHeight = _this.refs.dialogHeader ? _this.refs.dialogHeader.offsetHeight : 0;
     let footHeight = _this.refs.dialogFooter ? _this.refs.dialogFooter.offsetHeight : 0;
     let bodyHeight =
@@ -310,7 +320,7 @@ export default class Dialog extends PureComponent {
       this.setPosition(newProps);
       let st = setTimeout(() => {
         clearTimeout(st);
-          this.setPosition(newProps);
+        this.setPosition(newProps);
       }, 0);
       //这里绑定resize事件进行maxheight值重置
       // EleResize.on(this.refs.dialogContent,()=>{
@@ -356,7 +366,7 @@ export default class Dialog extends PureComponent {
   maskHandle = () => {
     this.props.maskHide && this.hide();
   }
-  onDragStop = (e,data)=>{
+  onDragStop = (e, data) => {
     this.dragPosition = data;
   }
   renderHTML() {
@@ -392,10 +402,10 @@ export default class Dialog extends PureComponent {
     if (this.state.isShow) {
       // console.log(this.bounds)
       let position;
-      if(!this.state.draggable){
-        position={x:0,y:0}
+      if (!this.state.draggable) {
+        position = { x: 0, y: 0 }
       }
-      let DD = <Draggable onStop={this.onDragStop} position={position} disabled={!this.state.draggable} handle={this.props.dragHandle || ".dialog-title"} bounds={this.bounds}>{this.renderDialog()}</Draggable> ;
+      let DD = <Draggable onStop={this.onDragStop} position={position} disabled={!this.state.draggable} handle={this.props.dragHandle || ".dialog-title"} bounds={this.bounds}>{this.renderDialog()}</Draggable>;
       if (this.state.mask) {
         return <div
           className={"x-dialog-continer"
@@ -455,47 +465,57 @@ export default class Dialog extends PureComponent {
   }
   onFocus = (e) => {
     // 阻止与原生事件的冒泡
-    if(e.target && (e.target.tagName.toLowerCase() == 'button' || e.target.tagName.toLowerCase() == 'a')){
+    if (e.target && (e.target.tagName.toLowerCase() == 'button' || e.target.tagName.toLowerCase() == 'a')) {
       return;
     }
     // lastDialog = this;
     this.props.onClick(e);
   }
+  getMaxContainer() {
+    let maxContainer = document.body;
+    if (typeof this.props.maxContainer === 'string') {
+      maxContainer = document.querySelector(this.props.maxContainer)
+    } else if (typeof this.props.maxContainer === 'object') {
+      maxContainer = this.props.maxContainer;
+    }
+    return maxContainer;
+  }
   // status = 'reset';
   //最大化还原
-  maxreset=(e)=>{
-    if(this.state.status === 'reset'){
-      let maxContainer = document.body;
-      if(typeof this.props.maxContainer === 'string'){
-        maxContainer = document.querySelector(this.props.maxContainer)
-      }else if (typeof this.props.maxContainer === 'object') {
-        maxContainer = this.props.maxContainer;
-      }
-      this.oldprops={width:this.state.width,hegiht:this.state.height, mask:this.state.mask, fixed:this.state.fixed,draggable:this.state.draggable,defaultPosition:this.state.defaultPosition}
+  maxreset = (e) => {
+    let maxContainer = this.getMaxContainer();
+    if (this.state.status === 'reset') {
+      this.oldprops = { width: this.state.width, hegiht: this.state.height, mask: this.state.mask, fixed: this.state.fixed, draggable: this.state.draggable, defaultPosition: this.state.defaultPosition }
       var maxWH = {
-        fixed:["left","top","right","bottom"],
-        defaultPosition:{x:0,x2:0,y:0,y2:0},
-        width:'auto',
-        height:'auto',
-        draggable:false,
+        fixed: ["left", "top", "right", "bottom"],
+        defaultPosition: { x: 0, x2: 0, y: 0, y2: 0 },
+        width: 'auto',
+        height: 'auto',
+        draggable: false,
         // mask:false
       }
-      this.setState({status:'max',...maxWH},()=>{
+      maxContainer.scrollTo(0, 0);
+      if (maxContainer == document.body) {
+        window.scrollTo(0, 0);
+      }
+      maxContainer.className += ' overflowhidden';
+      this.setState({ status: 'max', ...maxWH }, () => {
         // this.setPosition(this.props);
         this.props.resizeCallback && this.props.resizeCallback(this.state.status);
       })
-    }else{
+    } else {
       this.status = 'reset';
-      this.setState({status:'reset',...this.oldprops},()=>{
+      maxContainer.className = maxContainer.className.replace('overflowhidden', '');
+      this.setState({ status: 'reset', ...this.oldprops }, () => {
         this.setPosition(this.props);
         this.props.resizeCallback && this.props.resizeCallback(this.state.status);
       })
     }
     this.props.maxreset && this.props.maxreset(this.state.status);
   }
-  computeWH=()=>{
-    if(status === 'max'){
-      this.setState({height:document.body.clientHeight,width:document.body.clientWidth})
+  computeWH = () => {
+    if (status === 'max') {
+      this.setState({ height: document.body.clientHeight, width: document.body.clientWidth })
     }
   }
   renderDialog() {
@@ -509,7 +529,7 @@ export default class Dialog extends PureComponent {
       top: y === null ? 'auto' : y,
       bottom: y2 === null ? 'auto' : y2
     }
-    return <div 
+    return <div
       className={"dialog-content " + this.props.className}
       ref="dialogContent"
       style={{
@@ -520,7 +540,7 @@ export default class Dialog extends PureComponent {
       }}
     >
       {this.props.title
-        ? <div className={"dialog-title "+this.props.titleClassName} ref="dialogHeader">
+        ? <div className={"dialog-title " + this.props.titleClassName} ref="dialogHeader">
           <h4>{this.props.title}</h4>
           <div
             onClick={this.hide.bind(this)}
@@ -529,14 +549,14 @@ export default class Dialog extends PureComponent {
             {this.props.closeIcon}
           </div>
           {this.props.isMax ?
-          <div onClick={this.maxreset} className="dailog-resetmax">
-            {this.state.status==='max'?this.props.resetIcon:this.props.maxIcon}
-          </div>
-          :undefined
+            <div onClick={this.maxreset} className="dailog-resetmax">
+              {this.state.status === 'max' ? this.props.resetIcon : this.props.maxIcon}
+            </div>
+            : undefined
           }
         </div>
         : undefined}
-      <div className="dialog-body" ref="dialogBody"  onClick={this.onFocus}>
+      <div className="dialog-body" ref="dialogBody" onClick={this.onFocus}>
         {this.props.children}
       </div>
       <div ref="dialogFooter">
