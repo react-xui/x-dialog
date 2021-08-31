@@ -55,7 +55,7 @@
     "style-loader": "^0.13.1",
     "uglify-js": "^2.6.0",
     "webpack": "^1.13.0",
-    "webpack-dev-server": "^1.14.1"
+    "webpack-dev-server": "^3.1.11"
   },
   "peerDependencies": {
     "react": "^16.0.0 || ^16.8.0",
