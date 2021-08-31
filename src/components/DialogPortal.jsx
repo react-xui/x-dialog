@@ -233,8 +233,9 @@ export default class Dialog extends PureComponent {
     this.timer && clearTimeout(this.timer);
   }
   setPosition = (newProps) => {
+    newProps = newProps || this.props;
     let _this = this;
-    if (!this.dialog || this.props.defaultPosition!==undefined) {
+    if (!this.dialog || this.props.defaultPosition !== undefined) {
       return;
     }
     _this.dialog.className ? _this.dialog.className += " opacity-animate" : undefined;

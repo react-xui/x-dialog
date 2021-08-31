@@ -1747,6 +1747,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    _this2.setPosition = function (newProps) {
+	      newProps = newProps || _this2.props;
 	      var _this = _this2;
 	      if (!_this2.dialog || _this2.props.defaultPosition !== undefined) {
 	        return;
